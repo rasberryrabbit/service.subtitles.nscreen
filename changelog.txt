@@ -1,0 +1,11 @@
+0.4
+- fix enum bug
+
+0.3
+- optimization
+
+0.2
+- first beta
+
+0.1
+- first test.
