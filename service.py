@@ -50,6 +50,7 @@ max_file_count = load_file_enum[int(__addon__.getSetting("max_load_files"))]
 use_titlename = __addon__.getSetting("use_titlename")
 user_agent = __addon__.getSetting("user_agent")
 use_engkeyhan = __addon__.getSetting("use_engkeyhan")
+use_se_ep_check = __addon__.getSetting("use_se_ep_check")
 
 nscreen_base = "http://nscreen.info"
 nscreen_query = "/subtitle/default.aspx?keyword=%s&f=%s&page=%d"
@@ -154,8 +155,9 @@ def check_season_episode(str_title, se, ep):
 def parse_itemlist(item_list,lang,file_limit,list_mode):
     result=0
     for lang, link, titlename in item_list:
-        if list_mode==1 and 2!=check_season_episode(titlename,item['season'],item['episode']):
-            continue
+        if use_se_ep_check=="true":
+            if list_mode==1 and 2!=check_season_episode(titlename,item['season'],item['episode']):
+                continue
         if result<file_limit:
             ## log(__scriptname__,"%d-%d %s" % (result,file_limit,link))
             file_info = nscreen_file(link)
