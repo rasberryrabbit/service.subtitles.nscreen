@@ -54,12 +54,13 @@ use_engkeyhan = __addon__.getSetting("use_engkeyhan")
 nscreen_base = "http://nscreen.info"
 nscreen_query = "/subtitle/default.aspx?keyword=%s&f=%s&page=%d"
 
-pattern_file = "<div id=\"subt\" class=\"sub_downsmall\">\s+?<a href=\"([^\"]+)\"[^>]+>\s+?<b>([^<]+)</b>"
+pattern_file = "<div id=\"subt\" class=\"sub_downsmall\">\s+?<a href=\"([^\"]+)\"[^>]+>\s+?<b>([^<]+|)<"
 pattern_rate = "<span id=\"ctl00_MainContent_lblRating\"><div class='basic'[^>]+></div><div [^>]+>([^\(']+)\("
 expr_file = re.compile(pattern_file, re.IGNORECASE)
 expr_rate = re.compile(pattern_rate, re.IGNORECASE)
 pattern_query = "<div id=\"subt\" class=\"sub_search_subsearch\">\s+?<span [^>]+>([^<]+)</span>\s+?<span [^>]+><a href='([^']+)'[^>]+>([^<]+)</a></span>"
 expr_query = re.compile(pattern_query, re.IGNORECASE)
+ep_expr = re.compile("\d{1,2}[^\d\s]\d{1,3}")
 
 def prepare_search_string(s):
     s = string.strip(s)
@@ -70,7 +71,7 @@ def log(module, msg):
     xbmc.log((u"### [%s] - %s" % (module, msg,)).encode('utf-8'))    
 
 # get subtitle pages
-def get_subpages(query):
+def get_subpages(query,list_mode=0):
     file_count = 0
     total_page = 0
     newquery = urllib2.quote(prepare_search_string(query))
@@ -80,7 +81,7 @@ def get_subpages(query):
             lang = "en"
         while total_page<max_pages and file_count<max_file_count:
             ## log(__scriptname__,"%d - %d" %(max_file_count, file_count))
-            result_count = nscreen_list(newquery,lang,page_count,max_file_count-file_count)
+            result_count = nscreen_list(newquery,lang,page_count,max_file_count-file_count,list_mode)
             if result_count == 0:
                 break
             file_count += result_count
@@ -117,9 +118,44 @@ def nscreen_file(link):
             item_file.append([flink.replace(" ","%20"),fname,file_rating])
     return item_file
 
-def parse_itemlist(item_list,lang,file_limit):
+def check_season_episode(str_title, se, ep):
+    result = 0
+    re_str = ep_expr.search(str_title)
+    new_season = ""
+    new_episode = ""    
+    if re_str:
+        str_temp = re_str.group(0)
+        for i in range(0, len(str_temp)):
+            c = str_temp[i]
+            if c.isdigit():
+                       new_season += c
+            else:
+                break
+        for i in range(len(str_temp)-1, -1, -1):
+            c = str_temp[i]
+            if c.isdigit():
+                       new_episode = c + new_episode
+            else:
+                break
+    if new_season=="":
+        new_season="0"            
+    if new_episode=="":
+        new_episode="0"
+    if se=="":
+        se="0"
+    if ep=="":
+        ep="0"
+    if int(new_season)==int(se):
+        result = 1
+        if int(new_episode)==int(ep):
+            result = 2
+    return result    
+    
+def parse_itemlist(item_list,lang,file_limit,list_mode):
     result=0
     for lang, link, titlename in item_list:
+        if list_mode==1 and 2!=check_season_episode(titlename,item['season'],item['episode']):
+            continue
         if result<file_limit:
             ## log(__scriptname__,"%d-%d %s" % (result,file_limit,link))
             file_info = nscreen_file(link)
@@ -127,7 +163,10 @@ def parse_itemlist(item_list,lang,file_limit):
             if file_len:
                 result+=file_len
                 link = nscreen_base+link.replace(" ","%20")
+                file_no = 1
                 for file_link, file_name, file_rating in file_info:
+                    if file_name=="":
+                        file_name = titlename+".%d" %(file_no)
                     file_link = nscreen_base+file_link.replace(" ","%20")
                     listitem = xbmcgui.ListItem(label          = lang[lang.find('[')+1:lang.find(']')] ,
                                                 label2         = file_name if use_titlename == "false" else titlename,
@@ -142,9 +181,11 @@ def parse_itemlist(item_list,lang,file_limit):
                                                                                     urllib2.quote(file_name)
                                                                                     )
                     xbmcplugin.addDirectoryItem(handle=int(sys.argv[1]),url=listurl,listitem=listitem,isFolder=False)
+                    file_no += 1
     return result
+    
 # list per pages
-def nscreen_list(query, lang, pageno, file_limit):
+def nscreen_list(query, lang, pageno, file_limit, list_mode):
     url_list = nscreen_base+nscreen_query % (query, lang, pageno)
     req_list = urllib2.Request(url_list, headers={ 'User-Agent' : user_agent, 'Referer': url_list})
     resp_list = urllib2.urlopen(req_list)
@@ -152,7 +193,7 @@ def nscreen_list(query, lang, pageno, file_limit):
     result = 0
     item_list = expr_query.findall(content_list)
     if item_list:
-        result=parse_itemlist(item_list,lang,file_limit)
+        result=parse_itemlist(item_list,lang,file_limit,list_mode)
     return result
 
 # download file
@@ -203,15 +244,17 @@ def nscreen_download(file_link, file_name, link):
 def search(item):
     filename = os.path.splitext(os.path.basename(item['file_original_path']))[0]
     lastgot = 0
+    list_mode = 0
     if item['mansearch']:
         lastgot = get_subpages(item['mansearchstr'])
         if use_engkeyhan == "true":
             lastgot += get_subpages(engtypetokor(item['mansearchstr']))
     elif item['tvshow']:
-        lastgot = get_subpages(item['tvshow'])
+        list_mode = 1
+        lastgot = get_subpages(item['tvshow'],1)
     elif item['title'] and item['year']:
         lastgot = get_subpages(item['title'])
-    if lastgot == 0:
+    if lastgot == 0 and list_mode != 1:
         if not filename.startswith("video."):
             lastgot = get_subpages(filename)
         

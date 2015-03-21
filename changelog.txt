@@ -1,3 +1,7 @@
+0.5
+- There is no missing item that invalid filename from web.
+- tvshow is now search with season/episode.
+
 0.4
 - fix enum bug
 
