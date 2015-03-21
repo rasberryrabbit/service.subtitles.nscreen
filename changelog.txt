@@ -1,3 +1,6 @@
+0.6
+- add option for season/episode checking
+
 0.5
 - There is no missing item that invalid filename from web.
 - tvshow is now search with season/episode.
