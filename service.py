@@ -38,7 +38,7 @@ def log(module, msg):
 def clear_tempdir(strpath):
     if xbmcvfs.exists(strpath):
         try:
-            low_time = time.mktime((datetime.date.today() - datetime.timedelta(days=30)).timetuple())
+            low_time = time.mktime((datetime.date.today() - datetime.timedelta(days=15)).timetuple())
             now_time = time.time()
             for file_name in xbmcvfs.listdir(strpath)[1]:
                 if sys.platform.startswith('win'):
