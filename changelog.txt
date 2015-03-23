@@ -1,3 +1,6 @@
+0.7
+- support gzip compressed html content. use less traffic.
+
 0.6
 - add option for season/episode checking
 
