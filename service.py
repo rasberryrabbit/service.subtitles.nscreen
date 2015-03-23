@@ -17,6 +17,9 @@ import HTMLParser
 import time
 import datetime
 import urllib2
+import gzip
+import zlib
+import StringIO
 
 __addon__ = xbmcaddon.Addon()
 __author__ = __addon__.getAddonInfo('author')
@@ -118,13 +121,33 @@ def check_ext(str):
             retval = 1
         return retval
 
+# support compressed content
+def decode_content (page):
+    encoding = page.info().get("Content-Encoding")    
+    if encoding in ('gzip', 'x-gzip', 'deflate'):
+        content = page.read()
+        if encoding == 'deflate':
+            data = StringIO.StringIO(zlib.decompress(content))
+        else:
+            data = gzip.GzipFile('', 'rb', 9, StringIO.StringIO(content))
+        page = data.read()
+    else:
+        page = page.read()
+    return page
+
+def read_url(url):
+    opener = urllib2.build_opener()
+    opener.addheaders = [('User-Agent',user_agent), ('Referer',url), ('Accept-Encoding','gzip,deflate')]
+    rep = opener.open(url)
+    res = decode_content(rep)
+    rep.close()
+    return res
+
 # file link, filename, file rating
 def nscreen_file(link):
     item_file = []
     url_file = nscreen_base+link.replace(" ","%20")
-    req_file = urllib2.Request(url_file, headers={ 'User-Agent' : user_agent, 'Referer': url_file })
-    resp_file = urllib2.urlopen(req_file)
-    content_file = resp_file.read()
+    content_file = read_url(url_file)
     file_rate = expr_rate.search(content_file)
     try:
         if file_rate:
@@ -188,7 +211,7 @@ def parse_itemlist(item_list,lang,file_limit,list_mode):
                 file_no = 1
                 for file_link, file_name, file_rating in file_info:
                     if file_name=="":
-                        file_name = titlename+".%d" %(file_no)
+                        file_name = titlename+"_%d.xxx" %(file_no)
                     file_link = nscreen_base+file_link.replace(" ","%20")
                     listitem = xbmcgui.ListItem(label          = lang[lang.find('[')+1:lang.find(']')] ,
                                                 label2         = file_name if use_titlename == "false" else titlename,
@@ -209,9 +232,7 @@ def parse_itemlist(item_list,lang,file_limit,list_mode):
 # list per pages
 def nscreen_list(query, lang, pageno, file_limit, list_mode):
     url_list = nscreen_base+nscreen_query % (query, lang, pageno)
-    req_list = urllib2.Request(url_list, headers={ 'User-Agent' : user_agent, 'Referer': url_list})
-    resp_list = urllib2.urlopen(req_list)
-    content_list = resp_list.read()
+    content_list = read_url(url_list)
     result = 0
     item_list = expr_query.findall(content_list)
     if item_list:
