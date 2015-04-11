@@ -1,5 +1,6 @@
 0.8
 - change zip file handling.
+- no more search by filename
 
 0.7
 - support gzip compressed html content. use less traffic.
