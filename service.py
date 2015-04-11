@@ -20,6 +20,7 @@ import urllib2
 import gzip
 import zlib
 import StringIO
+import zipfile
 
 __addon__ = xbmcaddon.Addon()
 __author__ = __addon__.getAddonInfo('author')
@@ -239,6 +240,29 @@ def nscreen_list(query, lang, pageno, file_limit, list_mode):
         result=parse_itemlist(item_list,lang,file_limit,list_mode)
     return result
 
+def zip_filelist(fname):
+    files = []
+    zfile = zipfile.ZipFile(fname)
+    fileid = 1
+    name = os.path.splittext(fname)[0]
+    for finfo in zfile.infolist():
+        if findo.file_size>0:
+            if check_ext(findo.filename)==1:
+                ext = os.path.splittext(findo.filename)[1]
+                oname = "%s%d%s" % (name,fileid,ext)
+                ifile=zfile.open(findo)
+                try:
+                    ofile=open(oname,"wb")
+                    ofile.write(ifile.read())
+                    ofile.close()
+                    files.append(oname)
+                except:
+                    log(__scriptname__,"File Error (zip)")
+                ifile.close()
+                fileid += 1
+    zfile.close()
+    return files
+
 # download file
 def nscreen_download(file_link, file_name, link):
     subtitle_list = []
@@ -248,21 +272,23 @@ def nscreen_download(file_link, file_name, link):
     req_download = urllib2.Request(file_link, headers={ 'User-Agent' : user_agent, 'Referer': link})
     resp_download = urllib2.urlopen(req_download)
     IsPack = 0
+    UseZipList = 0
     # save file
     try:
         file_handle = open(local_temp_file, "wb")
         file_handle.write(resp_download.read())
         file_handle.close()
-        # check archive type
-        file_handle = open(local_temp_file, "rb")
-        file_handle.seek(0)
-        if file_handle.read(1)=='R':
-            IsPack = 1
+        # check zip
+        if zipfile.is_zipfile(local_temp_file):
+            UseZipList = 1
         else:
+            # check rar archive type
+            file_handle = open(local_temp_file, "rb")
             file_handle.seek(0)
-            if file_handle.read(1)=='P':
+            if file_handle.read(4)=='Rar!':
                 IsPack = 1
-        file_handle.close()
+            file_handle.close()
+
     except:
         log(__scriptname__,"File Error (Download)")
 
@@ -272,15 +298,25 @@ def nscreen_download(file_link, file_name, link):
 
     packfile_time = os.stat(local_temp_file).st_mtime
 
-    for file in xbmcvfs.listdir(__temp__)[1]:
-        if sys.platform.startswith('win'):
-            file = os.path.join(__temp__, file)
-        else:
-            file = os.path.join(__temp__.encode('utf-8'), file)
-        if check_ext(file)!=-1:
-            cfile_time = os.stat(file).st_mtime
-            if cfile_time >= packfile_time and cfile_time <= time.time():
-                subtitle_list.append(file)
+    if UseZipList==1:
+        flist = zip_filelist(local_temp_file)
+        for name in flist:
+            subtitle_list.append(name)
+
+    else:
+        if IsPack==0:
+            subtitle_list.append(local_temp_file)
+
+    if len(subtitle_list)==0:
+        for file in xbmcvfs.listdir(__temp__)[1]:
+            if sys.platform.startswith('win'):
+                file = os.path.join(__temp__, file)
+            else:
+                file = os.path.join(__temp__.encode('utf-8'), file)
+            if check_ext(file)!=-1:
+                cfile_time = os.stat(file).st_mtime
+                if cfile_time >= packfile_time and cfile_time <= time.time():
+                    subtitle_list.append(file)
     
     return subtitle_list
  
@@ -297,9 +333,9 @@ def search(item):
         lastgot = get_subpages(item['tvshow'],1)
     elif item['title'] and item['year']:
         lastgot = get_subpages(item['title'])
-    if lastgot == 0 and list_mode != 1:
-        if not filename.startswith("video."):
-            lastgot = get_subpages(filename)
+    ##if lastgot == 0 and list_mode != 1:
+    ##    if not filename.startswith("video."):
+    ##        lastgot = get_subpages(filename)
         
 def normalizeString(str):
     return unicodedata.normalize(
