@@ -333,9 +333,8 @@ def search(item):
         lastgot = get_subpages(item['tvshow'],1)
     elif item['title'] and item['year']:
         lastgot = get_subpages(item['title'])
-    ##if lastgot == 0 and list_mode != 1:
-    ##    if not filename.startswith("video."):
-    ##        lastgot = get_subpages(filename)
+    else:
+        lastgot = get_subpages(filename)
         
 def normalizeString(str):
     return unicodedata.normalize(
