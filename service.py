@@ -307,7 +307,7 @@ def nscreen_download(file_link, file_name, link):
         if IsPack==0:
             subtitle_list.append(local_temp_file)
 
-    if len(subtitle_list)==0:
+    if len(subtitle_list)==0 and IsPack==1:
         for file in xbmcvfs.listdir(__temp__)[1]:
             if sys.platform.startswith('win'):
                 file = os.path.join(__temp__, file)
