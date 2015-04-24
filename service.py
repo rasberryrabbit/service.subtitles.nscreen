@@ -244,11 +244,11 @@ def zip_filelist(fname):
     files = []
     zfile = zipfile.ZipFile(fname)
     fileid = 1
-    name = os.path.splittext(fname)[0]
+    name = os.path.splitext(fname)[0]
     for finfo in zfile.infolist():
         if findo.file_size>0:
             if check_ext(findo.filename)==1:
-                ext = os.path.splittext(findo.filename)[1]
+                ext = os.path.splitext(findo.filename)[1]
                 oname = "%s%d%s" % (name,fileid,ext)
                 ifile=zfile.open(findo)
                 try:
