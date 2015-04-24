@@ -1,3 +1,6 @@
+0.9
+- fix spelling error in zip function.
+
 0.8
 - change zip file handling.
 - no more search by filename
