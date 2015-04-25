@@ -246,11 +246,11 @@ def zip_filelist(fname):
     fileid = 1
     name = os.path.splitext(fname)[0]
     for finfo in zfile.infolist():
-        if findo.file_size>0:
-            if check_ext(findo.filename)==1:
-                ext = os.path.splitext(findo.filename)[1]
+        if finfo.file_size>0:
+            if check_ext(finfo.filename)==1:
+                ext = os.path.splitext(finfo.filename)[1]
                 oname = "%s%d%s" % (name,fileid,ext)
-                ifile=zfile.open(findo)
+                ifile=zfile.open(finfo)
                 try:
                     ofile=open(oname,"wb")
                     ofile.write(ifile.read())
