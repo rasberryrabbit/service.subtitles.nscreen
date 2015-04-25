@@ -248,16 +248,23 @@ def zip_filelist(fname):
     for finfo in zfile.infolist():
         if finfo.file_size>0:
             if check_ext(finfo.filename)==1:
-                ext = os.path.splitext(finfo.filename)[1]
-                oname = "%s%d%s" % (name,fileid,ext)
+                oname = os.path.split(finfo.filename)[1]
+                if sys.platform.startswith('win'):
+                    oname = os.path.join(__temp__, oname)
+                else:
+                    oname = os.path.join(__temp__.encode('utf-8'), oname)
+
                 ifile=zfile.open(finfo)
                 try:
                     ofile=open(oname,"wb")
-                    ofile.write(ifile.read())
-                    ofile.close()
-                    files.append(oname)
                 except:
-                    log(__scriptname__,"File Error (zip)")
+                    ext = os.path.splitext(finfo.filename)[1]
+                    oname = "%s(%d)%s" % (name,fileid,ext)
+                    ofile=open(oname,"wb")
+
+                ofile.write(ifile.read())
+                ofile.close()
+                files.append(oname)
                 ifile.close()
                 fileid += 1
     zfile.close()
