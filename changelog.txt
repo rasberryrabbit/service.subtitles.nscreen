@@ -1,5 +1,6 @@
-0.9b
+0.9c
 - fix spelling errors in zip function.
+- use real name at zip extraction.
 
 0.8
 - change zip file handling.
