@@ -139,16 +139,21 @@ def decode_content (page):
 def read_url(url):
     opener = urllib2.build_opener()
     opener.addheaders = [('User-Agent',user_agent), ('Referer',url), ('Accept-Encoding','gzip,deflate')]
-    rep = opener.open(url)
-    res = decode_content(rep)
-    rep.close()
-    return res
+    try:
+        rep = opener.open(url)
+        res = decode_content(rep)
+        rep.close()
+        return res
+    except:
+        return None
 
 # file link, filename, file rating
 def nscreen_file(link):
     item_file = []
     url_file = nscreen_base+link.replace(" ","%20")
     content_file = read_url(url_file)
+    if content_file is None:
+        return item_file
     file_rate = expr_rate.search(content_file)
     try:
         if file_rate:
@@ -235,6 +240,8 @@ def nscreen_list(query, lang, pageno, file_limit, list_mode):
     url_list = nscreen_base+nscreen_query % (query, lang, pageno)
     content_list = read_url(url_list)
     result = 0
+    if content_list is None:
+        return result
     item_list = expr_query.findall(content_list)
     if item_list:
         result=parse_itemlist(item_list,lang,file_limit,list_mode)
