@@ -85,7 +85,7 @@ expr_file = re.compile(pattern_file, re.IGNORECASE)
 expr_rate = re.compile(pattern_rate, re.IGNORECASE)
 pattern_query = "<div id=\"subt\" class=\"sub_search_subsearch\">\s+?<span [^>]+>([^<]+)</span>\s+?<span [^>]+><a href='([^']+)'[^>]+>([^<]+)</a></span>"
 expr_query = re.compile(pattern_query, re.IGNORECASE)
-ep_expr = re.compile("\d{1,2}[^\d\s]\d{1,3}")
+ep_expr = re.compile("(\d{1,2})(\s+)?[^\d\s\.]+(\d{1,3})")
 
 def prepare_search_string(s):
     s = string.strip(s)
@@ -99,7 +99,10 @@ def log(module, msg):
 def get_subpages(query,list_mode=0):
     file_count = 0
     total_page = 0
-    newquery = urllib2.quote(prepare_search_string(query))
+    if item['mansearch']:
+        newquery = query
+    else:
+        newquery = urllib.quote_plus(prepare_search_string(query))
     for lang in item['sub_lang']:
         page_count=1
         if lang=="":
@@ -174,22 +177,11 @@ def check_season_episode(str_title, se, ep):
     new_season = ""
     new_episode = ""    
     if re_str:
-        str_temp = re_str.group(0)
-        for i in range(0, len(str_temp)):
-            c = str_temp[i]
-            if c.isdigit():
-                       new_season += c
-            else:
-                break
-        for i in range(len(str_temp)-1, -1, -1):
-            c = str_temp[i]
-            if c.isdigit():
-                       new_episode = c + new_episode
-            else:
-                break
-    if new_season=="":
-        new_season="0"            
-    if new_episode=="":
+        new_season = re_str.group(1)
+        new_episode = re_str.group(3)
+    if new_season.strip()=="":
+        new_season="0"
+    if new_episode.strip()=="":
         new_episode="0"
     if se=="":
         se="0"
@@ -199,7 +191,7 @@ def check_season_episode(str_title, se, ep):
         result = 1
         if int(new_episode)==int(ep):
             result = 2
-    return result    
+    return result
     
 def parse_itemlist(item_list,lang,file_limit,list_mode):
     result=0
