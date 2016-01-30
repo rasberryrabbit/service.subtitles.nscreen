@@ -87,6 +87,38 @@ pattern_query = "<div id=\"subt\" class=\"sub_search_subsearch\">\s+?<span [^>]+
 expr_query = re.compile(pattern_query, re.IGNORECASE)
 ep_expr = re.compile("(\d{1,2})(\s+)?[^\d\s\.]+(\d{1,3})")
 
+def smart_quote(str):
+    ret = ''
+    spos = 0
+    epos = len(str)
+    while spos<epos:
+        ipos = str.find('%',spos)
+        if ipos == -1:
+            ret += urllib.quote_plus(str[spos:])
+            spos = epos
+        else:
+            ret += urllib.quote_plus(str[spos:ipos])
+            spos = ipos
+            ipos+=1
+            # check '%xx'
+            if ipos+1<epos:
+                if str[ipos] in string.hexdigits:
+                    ipos+=1
+                    if str[ipos] in string.hexdigits:
+                        # pass encoded
+                        ipos+=1
+                        ret+=str[spos:ipos]
+                    else:
+                        ret+=urllib.quote_plus(str[spos:ipos])
+                else:
+                    ipos+=1
+                    ret+=urllib.quote_plus(str[spos:ipos])
+                spos = ipos
+            else:
+                ret+=urllib.quote_plus(str[spos:epos])
+                spos = epos
+    return ret
+
 def prepare_search_string(s):
     s = string.strip(s)
     s = re.sub(r'\(\d\d\d\d\)$', '', s)  # remove year from title
@@ -100,7 +132,7 @@ def get_subpages(query,list_mode=0):
     file_count = 0
     total_page = 0
     if item['mansearch']:
-        newquery = query
+        newquery = smart_quote(query)
     else:
         newquery = urllib.quote_plus(prepare_search_string(query))
     for lang in item['sub_lang']:
