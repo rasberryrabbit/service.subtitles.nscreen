@@ -5,5 +5,7 @@
     <string id="30003">use title name instead of filename</string>
     <string id="30004">User-Agent</string>    
     <string id="30005">English key to Hangul</string>
-    <string id="30006">Check season/episode</string>    
+    <string id="30006">Check season/episode</string>
+    <string id="30007">Use English to Korean Dictionary</string>
+    <string id="30008">English to Korean Dictionary</string>
 </strings>
