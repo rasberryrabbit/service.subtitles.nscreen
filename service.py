@@ -89,7 +89,7 @@ expr_file = re.compile(pattern_file, re.IGNORECASE)
 expr_rate = re.compile(pattern_rate, re.IGNORECASE)
 pattern_query = "<div id=\"subt\" class=\"sub_search_subsearch\">\s+?<span [^>]+>([^<]+)</span>\s+?<span [^>]+><a href='([^']+)'[^>]+>([^<]+)</a></span>"
 expr_query = re.compile(pattern_query, re.IGNORECASE)
-ep_expr = re.compile("(\d{1,2})(\s+)?[^\d\s\.]+(\d{1,3})")
+ep_expr = re.compile("[\D\S]+(\d{1,2})(\s+)?[^\d\s\.]+(\d{1,3})")
 
 # dictinary
 def dict_read(filename):
