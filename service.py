@@ -241,26 +241,32 @@ def nscreen_file(link):
     return item_file
 
 def check_season_episode(str_title, se, ep):
-    result = 0
-    re_str = ep_expr.search(str_title)
-    new_season = ""
-    new_episode = ""    
-    if re_str:
-        new_season = re_str.group(1)
-        new_episode = re_str.group(3)
-    if new_season.strip()=="":
-        new_season="0"
-    if new_episode.strip()=="":
-        new_episode="0"
-    if se=="":
-        se="0"
-    if ep=="":
-        ep="0"
-    if int(new_season)==int(se):
-        result = 1
-        if int(new_episode)==int(ep):
-            result = 2
-    return result
+    r = re.findall('(\D+)(\d+)',str_title)
+    lmatch = 0
+    if r:
+        numbers = []
+        for mdig in r:
+            try:
+                newnum = int(mdig[1])
+            except:
+                newnum=0
+            numbers.append(newnum)
+        lnum = -1
+        if se=="":
+            se="0"
+        if ep=="":
+            ep="0"
+        numse = int(se)
+        numep = int(ep)
+        for num in numbers[::-1]:
+            if lnum != -1:
+                if num == numse:
+                    if lnum == numep:
+                        return 2
+                    else:
+                      lmatch = 1
+            lnum = num
+    return lmatch
     
 def parse_itemlist(item_list,lang,file_limit,list_mode):
     result=0

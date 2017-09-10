@@ -1,3 +1,6 @@
+0.9.9
+- improve season episode checking
+
 0.9.8
 - fix season / episode checking
 
